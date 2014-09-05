@@ -40,7 +40,10 @@ namespace Pinta
 			ToolBoxWidget toolbox = new ToolBoxWidget () { Name = "toolbox" };
 
 			toolbox_item.Label = Catalog.GetString ("Tools");
-			toolbox_item.Content = toolbox;
+			Xwt.Toolkit t = Xwt.Toolkit.CurrentEngine;
+			//get the native widget using the toolkit
+			Gtk.Widget nativeWidget = (Gtk.Widget)t.GetNativeWidget (toolbox);
+			toolbox_item.Content = nativeWidget;
 			toolbox_item.Icon = PintaCore.Resources.GetIcon ("Tools.Pencil.png");
 			toolbox_item.Behavior |= DockItemBehavior.CantClose;
 			toolbox_item.DefaultWidth = 65;

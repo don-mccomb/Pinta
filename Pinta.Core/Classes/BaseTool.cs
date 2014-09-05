@@ -45,7 +45,7 @@ namespace Pinta.Core
 		protected static Cairo.Point point_empty = new Cairo.Point (-500, -500);
 
 	    
-		protected ToggleToolButton tool_item;
+		protected Xwt.ToggleButton tool_item;
 		protected ToolItem tool_label;
 		protected ToolItem tool_image;
 		protected ToolItem tool_sep;
@@ -75,7 +75,7 @@ namespace Pinta.Core
 		public virtual string Icon { get { throw new ApplicationException ("Tool didn't override Icon"); } }		
 		public virtual string ToolTip { get { throw new ApplicationException ("Tool didn't override ToolTip"); } }
 		public virtual string StatusBarText { get { return string.Empty; } }
-		public virtual ToggleToolButton ToolItem { get { if (tool_item == null) tool_item = CreateToolButton (); return tool_item; } }
+		public virtual Xwt.ToggleButton ToolItem { get { if (tool_item == null) tool_item = CreateToolButton (); return tool_item; } }
 		public virtual bool Enabled { get { return true; } }
 		public virtual Gdk.Cursor DefaultCursor { get { return null; } }
 		public virtual Gdk.Key ShortcutKey { get { return (Gdk.Key)0; } }
@@ -313,15 +313,18 @@ namespace Pinta.Core
 			SetCursor (null);
 		}
 
-		protected virtual ToggleToolButton CreateToolButton ()
+		protected virtual Xwt.ToggleButton CreateToolButton ()
 		{
-			Gtk.Image i2 = new Gtk.Image (PintaCore.Resources.GetIcon (Icon));
-			i2.Show ();
+			Xwt.Drawing.Image i2 = PintaCore.Resources.GetXwtIcon (Icon);//new Xwt.Drawing.Image (PintaCore.Resources.GetIcon (Icon));
+			//i2.Show ();
 			
-			ToggleToolButton tool_item = new ToggleToolButton ();
-			tool_item.IconWidget = i2;
+			Xwt.ToggleButton tool_item = new Xwt.ToggleButton ();
+			tool_item.Style = Xwt.ButtonStyle.Flat;
+			//tool_item.
+			tool_item.Image = i2;
+			//tool_item.IconWidget = i2;
 			tool_item.Show ();
-			tool_item.Label = Name;
+			//tool_item.Label = Name;
 			
 			if (ShortcutKey != (Gdk.Key)0)
 				tool_item.TooltipText = string.Format ("{0}\n{2}: {1}\n\n{3}", Name, ShortcutKey.ToString ().ToUpperInvariant (), Catalog.GetString ("Shortcut key"), StatusBarText);

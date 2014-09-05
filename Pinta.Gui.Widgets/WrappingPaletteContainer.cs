@@ -31,129 +31,109 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Gtk;
+using Xwt;
+using Xwt.Drawing;
+//using Gtk;
 
 namespace Pinta.Gui.Widgets
 {
-    public class WrappingPaletteContainer : Container
+    public class WrappingPaletteContainer : Xwt.Canvas
     {
-        private List<Widget> children;
-		private Requisition[] childReqs;
         int iconSize = 16;
-
-		/// <summary>Returns the number of children.</summary>
-		public int NChildren
-		{
-			get { return children.Count; }
-		}
 
 		/// <summary>Default constructor.</summary>
         public WrappingPaletteContainer(int iconSize)
 		{
-			this.SetFlag (WidgetFlags.NoWindow);
-
-			this.AddEvents ((int)(Gdk.EventMask.ButtonPressMask | Gdk.EventMask.ButtonReleaseMask | Gdk.EventMask.PointerMotionMask));
-
-			this.children = new List<Widget> ();
-
             this.iconSize = iconSize;
-		}
-
-		/// <summary>Adds a widget before all existing widgetw.</summary>
-		/// <param name="w">The widget to add.</param>
-		public void Prepend (Widget w)
-		{
-			Insert (w, 0);
 		}
 
 		/// <summary>Adds a widget after all existing widgets.</summary>
 		/// <param name="w">The widget to add.</param>
-		public void Append (Widget w)
+		public void Append (Xwt.Widget w)
 		{
-			Insert (w, -1);
+			Insert (w);
 		}
 
 		/// <summary>Inserts a widget at the specified location.</summary>
 		/// <param name="w">The widget to add.</param>
 		/// <param name="WidgetIndex">The index (starting at 0) at which the widget must be inserted, or -1 to insert the widget after all existing widgets.</param>
-		public void Insert (Widget w, int WidgetIndex)
+		public void Insert (Xwt.Widget w)//, int WidgetIndex)
 		{
-			w.Parent = this;
 			w.Visible = true;
-
-			if(WidgetIndex == -1)
-				children.Add (w);
-			else
-				children.Insert (WidgetIndex, w);
-
-			ShowAll ();
+			AddChild (w);
 		}
 
-		/// <summary>Removes the widget at the specified index.</summary>
-		/// <param name="WidgetIndex">Index of the widget to remove.</param>
-		public void Remove (int WidgetIndex)
+		protected override void OnBoundsChanged ()
 		{
-			if(WidgetIndex == -1) WidgetIndex = children.Count - 1;
+			base.OnBoundsChanged ();
 
-			children[WidgetIndex].Parent = null;
-			children.RemoveAt (WidgetIndex);
-
-			ShowAll ();
-		}
-
-		protected override void ForAll (bool include_internals, Callback callback)
-		{
-			foreach(Widget w in children)
-			{
-				if(w.Visible) callback (w);
-			}
-		}
-
-		protected override void OnSizeRequested (ref Requisition requisition)
-		{
-			base.OnSizeRequested (ref requisition);
-
-			int n = children.Count, nVisible = 0;
-			childReqs = new Requisition[n];
-			for(int i = 0 ; i < n ; ++i)
-			{
-				if(children[i].Visible)
-				{
-					childReqs[i] = children[i].SizeRequest ();
-					++nVisible;
-				}
-			}
-
-            requisition.Width = iconSize;
-            requisition.Height = iconSize;
-		}
-
-		protected override void OnSizeAllocated (Gdk.Rectangle allocation)
-		{
-			base.OnSizeAllocated (allocation);
-
-			int n = children.Count;
-			Gdk.Rectangle childAlloc = allocation;
+			Xwt.Rectangle childAlloc = new Rectangle ();// = allocation;
 			int lineHeight = 0;
-			for(int i = 0 ; i < n ; ++i)
+			//this.
+			foreach(Widget w in Children)
 			{
-				if(children[i].Visible)
+				if(w.Visible)
 				{
-					childAlloc.Width = childReqs[i].Width;
-					childAlloc.Height = childReqs[i].Height;
+					childAlloc.Width = w.Size.Width;
+					childAlloc.Height = w.Size.Height;
 
-					if(childAlloc.X != allocation.X && childAlloc.Right > allocation.Right)
+					if(childAlloc.X != 0 && childAlloc.Right > this.Bounds.Width)
 					{
-						childAlloc.X = allocation.X;
+						childAlloc.X = 0;
 						childAlloc.Y += lineHeight;
+						//preferredSize.Height += lineHeight;
 						lineHeight = 0;
 					}
-
-					children[i].SizeAllocate (childAlloc);
+					this.SetChildBounds (w, new Rectangle(childAlloc.X, childAlloc.Y, w.Size.Width, w.Size.Height));
+					//children[i] (childAlloc);
 					childAlloc.X += childAlloc.Width;
-					lineHeight = Math.Max (childAlloc.Height, lineHeight);
+					//preferredSize.Width = Math.Max (childAlloc.X, preferredSize.Width);
+					lineHeight = Math.Max ((int)childAlloc.Height, lineHeight);
 				}
 			}
+			//preferredSize.Height += lineHeight;
+		}
+
+		protected override Size OnGetPreferredSize (SizeConstraint widthConstraint, SizeConstraint heightConstraint)
+		{
+			return base.OnGetPreferredSize (widthConstraint, heightConstraint);
+
+			Size preferredSize = new Size ();
+
+			Xwt.Rectangle childAlloc = new Rectangle ();// = allocation;
+			int lineHeight = 0;
+			//this.
+			foreach(Widget w in Children)
+			{
+				if(w.Visible)
+				{
+					childAlloc.Width = w.WidthRequest;
+					childAlloc.Height = w.HeightRequest;
+
+					if(childAlloc.X != 0 && childAlloc.Right > widthConstraint.AvailableSize)
+					{
+						childAlloc.X = 0;
+						childAlloc.Y += lineHeight;
+						preferredSize.Height += lineHeight;
+						lineHeight = 0;
+					}
+					this.SetChildBounds (w, new Rectangle(childAlloc.X, childAlloc.Y, w.WidthRequest, w.HeightRequest));
+					//children[i] (childAlloc);
+					childAlloc.X += childAlloc.Width;
+					preferredSize.Width = Math.Max (childAlloc.X, preferredSize.Width);
+					lineHeight = Math.Max ((int)childAlloc.Height, lineHeight);
+				}
+			}
+			preferredSize.Height += lineHeight;
+
+			this.MinWidth = this.MinHeight = iconSize;
+
+			if (preferredSize.Width == 0)
+				preferredSize.Width = preferredSize.Height = 50;
+
+			Console.WriteLine("toolbox: " +preferredSize.ToString ());
+
+			return preferredSize;
 		}
     }
 }

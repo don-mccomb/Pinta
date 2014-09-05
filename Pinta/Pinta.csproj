@@ -97,14 +97,20 @@
     <Reference Include="Mono.Posix" />
     <Reference Include="Mono.Cairo" />
     <Reference Include="System.Xml" />
-    <Reference Include="Mono.Addins, Culture=neutral, PublicKeyToken=0738eb9f132ed756">
+    <Reference Include="Mono.Addins">
       <HintPath>..\lib\Mono.Addins.dll</HintPath>
     </Reference>
-    <Reference Include="Mono.Addins.Gui, Culture=neutral, PublicKeyToken=0738eb9f132ed756">
+    <Reference Include="Mono.Addins.Gui">
       <HintPath>..\lib\Mono.Addins.Gui.dll</HintPath>
     </Reference>
-    <Reference Include="Mono.Addins.Setup, Culture=neutral, PublicKeyToken=0738eb9f132ed756">
+    <Reference Include="Mono.Addins.Setup">
       <HintPath>..\lib\Mono.Addins.Setup.dll</HintPath>
+    </Reference>
+    <Reference Include="Xwt.Gtk">
+      <HintPath>..\..\xwt\Xwt.Gtk\bin\Debug\Xwt.Gtk.dll</HintPath>
+    </Reference>
+    <Reference Include="Xwt">
+      <HintPath>..\..\xwt\Xwt\bin\Debug\Xwt.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

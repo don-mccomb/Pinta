@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Gtk;
 using Pinta.Core;
+using Xwt;
 
 namespace Pinta.Gui.Widgets
 {
@@ -15,29 +16,32 @@ namespace Pinta.Gui.Widgets
 			PintaCore.Tools.ToolAdded += HandleToolAdded;
 			PintaCore.Tools.ToolRemoved += HandleToolRemoved;
 
-			ShowAll ();
+			//ShowAll ();
 		}
 		
 		// TODO: This should handle sorting the items
-		public void AddItem (ToolButton item)
+		public void AddItem (Xwt.ToggleButton item)
 		{
             Append(item);
+			item.Show ();
 		}
 
-		public void RemoveItem (ToolButton item)
+		public void RemoveItem (Xwt.ToggleButton item)
 		{
-			//Run a remove on both tables since it might be in either
-            Remove(item);
+			//Run a remove on both tables since it might be in either-
+
+            RemoveChild(item);
 		}
 
 		private void HandleToolAdded (object sender, ToolEventArgs e)
 		{
-			AddItem (e.Tool.ToolItem);
+			Append (e.Tool.ToolItem);
+			e.Tool.ToolItem.Show ();
 		}
 
 		private void HandleToolRemoved (object sender, ToolEventArgs e)
 		{
-			RemoveItem (e.Tool.ToolItem);
+			RemoveChild (e.Tool.ToolItem);
 		}
 	}
 }

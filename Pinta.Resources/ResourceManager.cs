@@ -26,6 +26,8 @@
 
 using System;
 using Gdk;
+using Xwt;
+using Xwt.Drawing;
 
 namespace Pinta.Resources
 {
@@ -56,6 +58,45 @@ namespace Pinta.Resources
 
 				// If gtk is missing it's "missing image", we'll create one on the fly
 				return CreateMissingImage (size);
+			}
+		}
+
+		public static Xwt.Drawing.Image GetXwtIcon (string name, int size)
+		{
+			try {
+				/*
+				// First see if it's a built-in gtk icon, like gtk-new.
+				// This will also load any icons added by Gtk.IconFactory.AddDefault() . 
+				using (var icon_set = Gtk.Widget.DefaultStyle.LookupIconSet (name)) {
+					if (icon_set != null) {
+						return icon_set.RenderIcon (Gtk.Widget.DefaultStyle, Gtk.Widget.DefaultDirection,
+						                            Gtk.StateType.Normal, GetIconSize (size), null, null);
+					}
+				}
+				*/
+
+				// Otherwise, get it from our embedded resources.
+				return Xwt.Drawing.Image.FromResource (name);
+			}
+			catch (Exception ex) {
+
+				// Ensure that we don't crash if an icon is missing for some reason.
+				System.Console.Error.WriteLine (ex.Message);
+				/*
+				// Try to return gtk's default missing image
+				if (name != Gtk.Stock.MissingImage)
+					return GetIcon (Gtk.Stock.MissingImage, size);
+*/
+				// If gtk is missing it's "missing image", we'll create one on the fly
+
+				var arcColor = new Xwt.Drawing.Color (1, 0, 1);
+				Xwt.Drawing.ImageBuilder ib = new ImageBuilder (16, 16);
+				ib.Context.Rectangle (0, 0, 16, 16);
+				ib.Context.SetColor (arcColor);
+				ib.Context.Fill ();
+				var img = ib.ToVectorImage ();
+
+				return img;
 			}
 		}
 

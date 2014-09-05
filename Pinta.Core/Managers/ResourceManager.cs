@@ -40,5 +40,10 @@ namespace Pinta
 		{
 			return ResourceLoader.GetIcon (name, size);
 		}
+
+		public Xwt.Drawing.Image GetXwtIcon (string name)
+		{
+			return ResourceLoader.GetXwtIcon (name,0);
+		}
 	}
 }

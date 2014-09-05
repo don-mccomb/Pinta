@@ -103,6 +103,7 @@ namespace Pinta
 			}
 			
 			Application.Init ();
+			Xwt.Application.InitializeAsGuest( Xwt.ToolkitType.Gtk);
 			MainWindow win = new MainWindow ();
 			//win.Show ();
 			
@@ -114,7 +115,8 @@ namespace Pinta
 			}
 
 			OpenFilesFromCommandLine (extra);
-			
+
+
 			Application.Run ();
 		}
 
