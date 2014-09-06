@@ -106,6 +106,7 @@
     <Compile Include="Classes\Re-editable\Text\TextEngine.cs" />
     <Compile Include="Classes\UserLayer.cs" />
     <Compile Include="Enumerations\BlendMode.cs" />
+    <Compile Include="Extensions\XwtDrawingExtensions.cs" />
     <Compile Include="HistoryItems\TextHistoryItem.cs" />
     <Compile Include="PixelOperations\CheckerBoardOperation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -225,7 +226,6 @@
     <Compile Include="Actions\AddinActions.cs" />
     <Compile Include="Enumerations\CursorShape.cs" />
     <Compile Include="EventArgs\BrushEventArgs.cs" />
-    <Compile Include="Extensions\AwtDrawingExtensions.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

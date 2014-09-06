@@ -25,9 +25,12 @@
 // THE SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using Pinta.Core;
 using Gtk;
 using Mono.Unix;
+using Xwt;
+
 
 namespace Pinta.Actions
 {
@@ -47,6 +50,7 @@ namespace Pinta.Actions
 
 		private void Activated (object sender, EventArgs e)
 		{
+            /*
 			var fcd = new Gtk.FileChooserDialog (Catalog.GetString ("Open Image File"), PintaCore.Chrome.MainWindow,
 							    FileChooserAction.Open, Gtk.Stock.Cancel, Gtk.ResponseType.Cancel,
 							    Gtk.Stock.Open, Gtk.ResponseType.Ok);
@@ -85,6 +89,43 @@ namespace Pinta.Actions
 			}
 
 			fcd.Destroy ();
+             * */
+
+            OpenFileDialog dlg = new OpenFileDialog("Select a file");
+            dlg.InitialFileName = "Some file";
+            dlg.Multiselect = true;
+
+            // Add image files filter
+            FileFilter ff = new FileFilter();
+            List<string> imageFilenameExtensions = new List<string>();
+            foreach (var format in PintaCore.System.ImageFormats.Formats)
+            {
+                if (!format.IsWriteOnly())
+                {
+                    foreach (var ext in format.Extensions)
+                        imageFilenameExtensions.Add(ext);
+                }
+            }
+
+            dlg.Filters.Add(new FileDialogFilter("Image files", imageFilenameExtensions.ToArray()));
+
+            //dlg.Filters.Add(new FileDialogFilter("Xwt files", "*.xwt"));
+            dlg.Filters.Add(new FileDialogFilter("All files", "*.*"));
+            dlg.CurrentFolder = PintaCore.System.GetDialogDirectory();
+            //dlg.
+            if (dlg.Run())
+            {
+                PintaCore.System.LastDialogDirectory = dlg.CurrentFolder;
+
+                foreach (var file in dlg.FileNames)
+                {
+                    if (PintaCore.Workspace.OpenFile(file))
+                    {
+
+                    }
+                    RecentManager.Default.AddFull(file, PintaCore.System.RecentData);
+                }
+            }
 		}
 	}
 }
