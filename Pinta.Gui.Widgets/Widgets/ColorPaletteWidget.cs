@@ -25,14 +25,16 @@
 // THE SOFTWARE.
 
 using System;
-using Cairo;
+//using Cairo;
 using Pinta.Core;
 using Mono.Unix;
+using Xwt;
+using Xwt.Drawing;
 
 namespace Pinta.Gui.Widgets
 {
 	[System.ComponentModel.ToolboxItem (true)]
-	public class ColorPaletteWidget : Gtk.DrawingArea
+	public class ColorPaletteWidget : Canvas
 	{
 		private Rectangle primary_rect = new Rectangle (7, 7, 30, 30);
 		private Rectangle secondary_rect = new Rectangle (22, 22, 30, 30);
@@ -49,8 +51,11 @@ namespace Pinta.Gui.Widgets
         int jRows;
         int iRows;
 
-		private Gdk.Pixbuf swap_icon;
-		private Gdk.Pixbuf reset_icon;
+		Xwt.Drawing.Image swapIcon;
+		Xwt.Drawing.Image resetIcon;
+		//private Gdk.Pixbuf swap_icon;
+		//private Gdk.Pixbuf reset_icon;
+
 		private Palette palette;
 
         enum OrientationEnum
@@ -62,14 +67,18 @@ namespace Pinta.Gui.Widgets
 		public ColorPaletteWidget ()
 		{
 			// Insert initialization code here.
-			this.AddEvents ((int)Gdk.EventMask.ButtonPressMask);
-			
-			swap_icon = PintaCore.Resources.GetIcon ("ColorPalette.SwapIcon.png");
-			reset_icon = PintaCore.Resources.GetIcon ("ColorPalette.ResetIcon.png");
+			//this.AddEvents ((int)Gdk.EventMask.ButtonPressMask);
+
+
+
+			swapIcon = PintaCore.Resources.GetXwtIcon ("ColorPalette.SwapIcon.png");
+			resetIcon = PintaCore.Resources.GetXwtIcon ("ColorPalette.ResetIcon.png");
 			palette = PintaCore.Palette.CurrentPalette;
 
-			HasTooltip = true;
-			QueryTooltip += HandleQueryTooltip;
+			MinWidth = MinHeight = primarySecondaryAreaSize;
+
+			//HasTooltip = true;
+			//QueryTooltip += HandleQueryTooltip;
 		}
 
 		public void Initialize ()
@@ -83,65 +92,56 @@ namespace Pinta.Gui.Widgets
 		{
 			// Color change events may be received while the widget is minimized,
 			// so we only call Invalidate() if the widget is shown.
-			if (IsRealized)
-			{
-				GdkWindow.Invalidate ();
-			}
+			if (this.Visible)
+				QueueDraw ();
+
 		}
 
-		protected override bool OnButtonPressEvent (Gdk.EventButton ev)
+		protected override void OnButtonPressed (ButtonEventArgs args)
 		{
-			if (swap_rect.ContainsPoint (ev.X, ev.Y)) {
-				Color temp = PintaCore.Palette.PrimaryColor;
+			if (swap_rect.ContainsPoint (args.X, args.Y)) {
+				Cairo.Color temp = PintaCore.Palette.PrimaryColor;
 				PintaCore.Palette.PrimaryColor = PintaCore.Palette.SecondaryColor;
 				PintaCore.Palette.SecondaryColor = temp;
-				GdkWindow.Invalidate ();
-			} else if (reset_rect.ContainsPoint (ev.X, ev.Y)) {
-				PintaCore.Palette.PrimaryColor = new Color (0, 0, 0);
-				PintaCore.Palette.SecondaryColor = new Color (1, 1, 1);
-				GdkWindow.Invalidate ();
+				QueueDraw ();
+			} else if (reset_rect.ContainsPoint (args.X, args.Y)) {
+				PintaCore.Palette.PrimaryColor = new Cairo.Color (0, 0, 0);
+				PintaCore.Palette.SecondaryColor = new Cairo.Color (1, 1, 1);
+				QueueDraw ();
 			}
 
-			if (primary_rect.ContainsPoint (ev.X, ev.Y)) {
-				Gtk.ColorSelectionDialog csd = new Gtk.ColorSelectionDialog (Catalog.GetString ("Choose Primary Color"));
-				csd.TransientFor = PintaCore.Chrome.MainWindow;
-				csd.ColorSelection.PreviousColor = PintaCore.Palette.PrimaryColor.ToGdkColor ();
-				csd.ColorSelection.CurrentColor = PintaCore.Palette.PrimaryColor.ToGdkColor ();
-				csd.ColorSelection.CurrentAlpha = PintaCore.Palette.PrimaryColor.GdkColorAlpha ();
-				csd.ColorSelection.HasOpacityControl = true;
+			if (primary_rect.ContainsPoint (args.X, args.Y))
+			{
+				SelectColorDialog csd = new SelectColorDialog ("Choose Primary Color");
+				csd.SupportsAlpha = true;
+				csd.Color = PintaCore.Palette.PrimaryColor.ToXwtColor ();
 
-				int response = csd.Run ();
+				bool colorSelected = csd.Run ();
 
-				if (response == (int)Gtk.ResponseType.Ok) {
-					PintaCore.Palette.PrimaryColor = csd.ColorSelection.GetCairoColor ();
-				}
-
-				csd.Destroy ();
-			} else if (secondary_rect.ContainsPoint (ev.X, ev.Y)) {
-				Gtk.ColorSelectionDialog csd = new Gtk.ColorSelectionDialog (Catalog.GetString ("Choose Secondary Color"));
-				csd.TransientFor = PintaCore.Chrome.MainWindow;
-				csd.ColorSelection.PreviousColor = PintaCore.Palette.SecondaryColor.ToGdkColor ();
-				csd.ColorSelection.CurrentColor = PintaCore.Palette.SecondaryColor.ToGdkColor ();
-				csd.ColorSelection.CurrentAlpha = PintaCore.Palette.SecondaryColor.GdkColorAlpha ();
-				csd.ColorSelection.HasOpacityControl = true;
-
-				int response = csd.Run ();
-
-				if (response == (int)Gtk.ResponseType.Ok) {
-					PintaCore.Palette.SecondaryColor = csd.ColorSelection.GetCairoColor ();
-				}
-
-				csd.Destroy ();
+				if (colorSelected)
+					PintaCore.Palette.PrimaryColor = csd.Color.ToCairoColor();
 			}
-			
-			int pal = PointToPalette ((int)ev.X, (int)ev.Y);
-			
+			else if (secondary_rect.ContainsPoint (args.X, args.Y))
+			{
+				SelectColorDialog csd = new SelectColorDialog ("Choose Secondary Color");
+				csd.SupportsAlpha = true;
+				csd.Color = PintaCore.Palette.SecondaryColor.ToXwtColor ();
+
+				bool colorSelected = csd.Run ();
+
+				if (colorSelected)
+					PintaCore.Palette.SecondaryColor = csd.Color.ToCairoColor ();
+			}
+
+			int pal = PointToPalette ((int)args.X, (int)args.Y);
+
 			if (pal >= 0) {
-				if (ev.Button == 3)
+				if (args.Button == PointerButton.Right)
 					PintaCore.Palette.SecondaryColor = palette[pal];
-				else if (ev.Button == 1)
+				else if (args.Button == PointerButton.Left)
 					PintaCore.Palette.PrimaryColor = palette[pal];
 				else {
+					/*
 					Gtk.ColorSelectionDialog csd = new Gtk.ColorSelectionDialog (Catalog.GetString ("Choose Palette Color"));
 					csd.TransientFor = PintaCore.Chrome.MainWindow;
 					csd.ColorSelection.PreviousColor = palette[pal].ToGdkColor ();
@@ -154,17 +154,71 @@ namespace Pinta.Gui.Widgets
 					if (response == (int)Gtk.ResponseType.Ok) {
 						palette[pal] = csd.ColorSelection.GetCairoColor ();
 					}
-					
+
 					csd.Destroy ();
+					*/
+
+					SelectColorDialog csd = new SelectColorDialog ("Choose Palette Color");
+					csd.SupportsAlpha = true;
+					csd.Color = palette[pal].ToXwtColor ();
+
+					bool colorSelected = csd.Run ();
+
+					if (colorSelected)
+						palette[pal] = csd.Color.ToCairoColor ();
 				}
-				
-				GdkWindow.Invalidate ();	
+
+				QueueDraw ();	
 			}
-				
-			// Insert button press handling code here.
-			return base.OnButtonPressEvent (ev);
+
+			base.OnButtonPressed (args);
 		}
 
+		protected override void OnDraw (Context ctx, Rectangle dirtyRect)
+		{
+			base.OnDraw (ctx, dirtyRect);
+
+			if (Bounds.IsEmpty)
+				return;
+
+			// Draw Primary / Secondary Area
+
+			ctx.FillRectangle (secondary_rect, PintaCore.Palette.SecondaryColor.ToXwtColor ());
+
+			ctx.DrawRectangle (new Rectangle (secondary_rect.X + 1, secondary_rect.Y + 1, secondary_rect.Width - 2, secondary_rect.Height - 2), new Color (1, 1, 1), 1);
+			ctx.DrawRectangle (secondary_rect, new Color (0, 0, 0), 1);
+
+			ctx.FillRectangle (primary_rect, PintaCore.Palette.PrimaryColor.ToXwtColor ());
+			ctx.DrawRectangle (new Rectangle (primary_rect.X + 1, primary_rect.Y + 1, primary_rect.Width - 2, primary_rect.Height - 2), new Color (1, 1, 1), 1);
+			ctx.DrawRectangle (primary_rect, new Color (0, 0, 0), 1);
+
+			ctx.DrawImage (swapIcon, swap_rect.Location);
+			ctx.DrawImage (resetIcon, reset_rect.Location);
+
+			// Draw color swatches
+
+			int startI = primarySecondaryAreaSize;
+			int startJ = swatchAreaMargin;
+
+			int paletteIndex = 0;
+			for (int jRow = 0; jRow < jRows; jRow++)
+			{
+				for (int iRow = 0; iRow < iRows; iRow++)
+				{
+					if (paletteIndex >= palette.Count)
+						break;
+
+					int x = (orientation == OrientationEnum.Horizontal) ? startI + iRow * swatchSize : startJ + jRow * swatchSize;
+					int y = (orientation == OrientationEnum.Horizontal) ? startJ + jRow * swatchSize : startI + iRow * swatchSize;
+
+					ctx.FillRectangle(new Rectangle(x, y, swatchSize, swatchSize), palette[paletteIndex].ToXwtColor ());
+
+					paletteIndex++;
+				}
+			}
+		}
+
+		/*
 		protected override bool OnExposeEvent (Gdk.EventExpose ev)
 		{
 			base.OnExposeEvent (ev);
@@ -173,7 +227,7 @@ namespace Pinta.Gui.Widgets
 				
                 // Draw Primary / Secondary Area
 
-				g.FillRectangle (secondary_rect, PintaCore.Palette.SecondaryColor);
+				g.FillRectangle (;
 			
 				g.DrawRectangle (new Rectangle (secondary_rect.X + 1, secondary_rect.Y + 1, secondary_rect.Width - 2, secondary_rect.Height - 2), new Color (1, 1, 1), 1);
 				g.DrawRectangle (secondary_rect, new Color (0, 0, 0), 1);
@@ -210,13 +264,64 @@ namespace Pinta.Gui.Widgets
 			
 			return true;
 		}
+		*/
 
+		/*
 		protected override void OnSizeRequested (ref Gtk.Requisition requisition)
 		{
 			// Calculate desired size here.
             requisition.Height = requisition.Width = primarySecondaryAreaSize;
 		}
+		*/
 
+		protected override void OnBoundsChanged ()
+		{
+			base.OnBoundsChanged ();
+
+			int iSpaceAvailable, jSpaceAvailable;
+
+			// The orientation is horizontal when the widget is wider than it is tall
+			// The direction of 'i' is the horizontal (left-to-right) when
+			// widget orientation is horizontal,
+			// and vertical (top-to-bottom) when widget orientation is vertical.
+			// 'j' is in the other direction.
+			if (Bounds.Width > Bounds.Height)
+			{
+				orientation = OrientationEnum.Horizontal;
+				iSpaceAvailable = (int) Bounds.Width;
+				jSpaceAvailable = (int) Bounds.Height;
+			}
+			else
+			{
+				orientation = OrientationEnum.Vertical;
+				iSpaceAvailable = (int) Bounds.Height;
+				jSpaceAvailable = (int) Bounds.Width;
+			}
+
+			iSpaceAvailable -= primarySecondaryAreaSize + swatchAreaMargin;
+			jSpaceAvailable -= 2 * swatchAreaMargin;
+
+			// Determine max number of rows that can be displayed in available area
+			int maxPossibleIRows = Math.Max(1, iSpaceAvailable / swatchSize);
+			int maxPossibleJRows = Math.Max(1, jSpaceAvailable / swatchSize);
+
+			int iRowsWithDefaultNumOfJRows = (int)Math.Ceiling((double)palette.Count / defaultNumOfJRows);
+
+			// Display palette in default configuration if space is available
+			// (it looks better)
+			if ((maxPossibleJRows >= defaultNumOfJRows) && (maxPossibleIRows >= iRowsWithDefaultNumOfJRows))
+			{
+				iRows = iRowsWithDefaultNumOfJRows;
+				jRows = defaultNumOfJRows;
+			}
+			else // Compress palette to fit within available space
+			{
+				iRows = (int)Math.Ceiling((double)palette.Count / maxPossibleJRows);
+				jRows = (int)Math.Ceiling((double)palette.Count / iRows);
+			}
+		}
+
+		/*
         protected override void OnSizeAllocated(Gdk.Rectangle allocation)
         {
             base.OnSizeAllocated(allocation);
@@ -263,6 +368,7 @@ namespace Pinta.Gui.Widgets
                 jRows = (int)Math.Ceiling((double)palette.Count / iRows);
             }
         }
+        */
 		
 		private int PointToPalette (int x, int y)
 		{
@@ -300,6 +406,7 @@ namespace Pinta.Gui.Widgets
             }
 		}
 
+		/*
 		/// <summary>
 		/// Provide a custom tooltip based on the cursor location.
 		/// </summary>
@@ -324,5 +431,6 @@ namespace Pinta.Gui.Widgets
 			args.Tooltip.Text = text;
 			args.RetVal = (text != null);
 		}
+		*/
 	}
 }

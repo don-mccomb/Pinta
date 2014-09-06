@@ -225,6 +225,7 @@
     <Compile Include="Actions\AddinActions.cs" />
     <Compile Include="Enumerations\CursorShape.cs" />
     <Compile Include="EventArgs\BrushEventArgs.cs" />
+    <Compile Include="Extensions\AwtDrawingExtensions.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

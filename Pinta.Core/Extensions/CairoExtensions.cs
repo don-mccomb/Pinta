@@ -896,6 +896,11 @@ namespace Pinta.Core
 			return c;
 		}
 
+		public static Xwt.Drawing.Color ToXwtColor (this Cairo.Color color)
+		{
+			return new Xwt.Drawing.Color (color.R, color.G, color.B, color.A);
+		}
+
 		public static string ToString2 (this Cairo.Color c)
 		{
 			return string.Format ("R: {0} G: {1} B: {2} A: {3}", c.R, c.G, c.B, c.A);

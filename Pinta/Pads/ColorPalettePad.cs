@@ -40,7 +40,11 @@ namespace Pinta
 			ColorPaletteWidget palette = new ColorPaletteWidget () { Name = "palette" };
 
 			palette_item.Label = Catalog.GetString ("Palette");
-			palette_item.Content = palette;
+
+			Xwt.Toolkit t = Xwt.Toolkit.CurrentEngine;
+			//get the native widget using the toolkit
+			Gtk.Widget nativePalette = (Gtk.Widget)t.GetNativeWidget (palette);
+			palette_item.Content = nativePalette;
 			palette_item.Icon = PintaCore.Resources.GetIcon ("Pinta.png");
 			palette_item.DefaultLocation = "Toolbox/Bottom";
 			palette_item.Behavior |= DockItemBehavior.CantClose;
